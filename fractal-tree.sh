@@ -29,8 +29,11 @@ for row in $(seq 1 $ROWS); do
 done
 
 #######################################
-# Find center (start point) for each 
-# branch that will be initialized.
+# Find the center (start point) for  
+# each branch that will be initialized.
+# "Node" is intended as a group of 
+# branches that are all on the same 
+# level.
 # Globals:
 #   CENTERS
 #   Y_SIZE

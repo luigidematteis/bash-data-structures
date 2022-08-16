@@ -1,81 +1,104 @@
 #!/bin/bash
-declare -A tree
+#
+# This script generate a Fractal Tree representation
+# based on the number of iterations given by the user.
+#
+# Constraints:
+# Rows: 63
+# Columns: 100
+# First branch size: 16x16
+#
+
+declare -A TREE
+declare -a CENTERS
 declare ROWS=63
 declare COLUMNS=100
 declare Y_SIZE=16
+declare START_ROW=$ROWS
+declare ITERATOR_CENTER=0
+declare ITERATOR_NODE=0
+let CENTER=$COLUMNS/2
+CENTERS+=( "$CENTER" )
 
-# read input
+read input
 
-#--- Create default grid
-for i in $(seq 1 $ROWS); do
-	for j in $(seq 1 $COLUMNS); do
-		tree[$i,$j]="_"
+for row in $(seq 1 $ROWS); do
+	for col in $(seq 1 $COLUMNS); do
+		TREE[$row,$col]="_"
 	done
 done
 
-#---
-startRow=$ROWS
-let center=$COLUMNS/2
-declare -a centers
-centers+=( "$center" )
-iterator=0
-iteratorCenter=0
+#######################################
+# Find center (start point) for each 
+# branch that will be initialized.
+# Globals:
+#   CENTERS
+#   Y_SIZE
+#   ITERATOR_CENTER
+#   ITERATOR_NODE
+# Arguments:
+#   None
+#######################################
 findCenter () {
-    for c in ${centers[@]}; do
+    for c in ${CENTERS[@]}; do
         let left=$c-$Y_SIZE
         let right=$c+$Y_SIZE
-        centers+=( "$left" )
-        centers+=( "$right" )
+        CENTERS+=( "$left" )
+        CENTERS+=( "$right" )
     done
-    for s in $(seq 0 $iterator); do
-        unset centers[$s]
+    for s in $(seq 0 $ITERATOR_CENTER); do
+        unset CENTERS[$s]
     done
-    for e in ${centers[@]}; do
-        let iterator++
-        let iteratorCenter++
+    for e in ${CENTERS[@]}; do
+        let ITERATOR_CENTER++
+        let ITERATOR_NODE++
     done
 }
 
-buildBranch () {
+#######################################
+# Generate tree's branches iterating
+# through each centers point.
+# Globals:
+#   CENTERS
+#   Y_SIZE
+#   ITERATOR_NODE
+#   START_ROW
+# Arguments:
+#   None
+#######################################
+ buildBranch () {
     for k in $(seq 1 $Y_SIZE); do
-        for c in ${centers[@]}; do 
-            tree[$startRow,$c]="1"
+        for c in ${CENTERS[@]}; do 
+            TREE[$START_ROW,$c]="1"
         done
-        let startRow-=1
+        let START_ROW-=1
     done
-    for c in ${centers[@]}; do 
+    for c in ${CENTERS[@]}; do 
         let branch_left=$c-1
         let branch_right=$c+1
         for k in $(seq 1 $Y_SIZE); do
-            tree[$startRow,$branch_left]="1"
-            tree[$startRow,$branch_right]="1"
+            TREE[$START_ROW,$branch_left]="1"
+            TREE[$START_ROW,$branch_right]="1"
             let branch_left-=1
             let branch_right+=1
-            let startRow-=1
+            let START_ROW-=1
         done
-        if [[ "$iteratorCenter" -gt "0" ]]; then
-            let startRow=$startRow+$Y_SIZE
+        if [[ "$ITERATOR_NODE" -gt "0" ]]; then
+            let START_ROW=$START_ROW+$Y_SIZE
         fi
-        let iteratorCenter--
+        let ITERATOR_NODE--
     done
-    
     findCenter
     let Y_SIZE=$Y_SIZE/2
 }
 
-buildBranch
-buildBranch
-buildBranch
-buildBranch
-buildBranch
+for i in $(seq 1 $input); do
+   buildBranch
+done
 
-
-#---   
-
-#---Display grid
-for i in $(seq 1 $ROWS); do
-	for j in $(seq 1 $COLUMNS); do
-		echo -ne ${tree[$i,$j]}
+for row in $(seq 1 $ROWS); do
+	for col in $(seq 1 $COLUMNS); do
+		echo -ne ${TREE[$row,$col]}
 	done
 	echo
 done
